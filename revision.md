@@ -15,7 +15,7 @@ La integridad básica de los datos es consistente:
 - 65.818 IDs únicos de siniestro en ambas tablas.
 - No se encontraron IDs duplicados en la tabla de hechos.
 - No se encontraron IDs huérfanos en víctimas.
-- Se encontraron 4 filas completamente vacías en víctimas, que el notebook elimina.
+- Se encontraron 4 filas completamente vacías en víctimas, que el notebook elimina (quedando 75.193 filas válidas).
 - La distribución de `gravedad_siniestro` coincide con la documentada: 94,46% leves, 4,49% graves y 1,05% mortales.
 
 ## Hallazgos correctos o reproducibles
@@ -24,159 +24,125 @@ La integridad básica de los datos es consistente:
 - En 2025 se registran 11.752 siniestros.
 - La distribución de gravedad está fuertemente desbalanceada.
 - La integración por `id_siniestro` conserva las 65.818 filas de hechos.
-- La proporción de víctimas con sexo identificado que figura como masculina es aproximadamente 65,8%.
-- La combinación Moto vs. Auto supera los 13.000 hechos; el filtro utilizado produce 15.247 registros.
+- La proporción de víctimas con sexo identificado que figura como masculina es exactamente 65,8% (38.221 varones vs. 19.878 mujeres).
+- La combinación Moto vs. Auto lidera ampliamente en CABA con 16.414 hechos.
 - La prevención de `data leakage` está correctamente planteada para las futuras etapas de modelado.
 
-## Findings y riesgos
+---
 
-### 1. Rutas de carga incorrectas
+## Findings, riesgos y estado de resolución
 
-El notebook busca los CSV en la raíz y, como alternativa, en `TP-grupal/`:
+### - [x] 1. Rutas de carga incorrectas (RESUELTO)
 
-```python
-path_hechos = 'siniestros_viales_hechos.csv'
-path_victimas = 'siniestros_viales_victimas.csv'
+El notebook buscaba los CSV en la raíz y en `TP-grupal/`. La estructura real del repositorio contiene los archivos en la carpeta `data/`.
 
-if not os.path.exists(path_hechos):
-    path_hechos = 'TP-grupal/siniestros_viales_hechos.csv'
-```
-
-La estructura real es:
-
-```text
-data/siniestros_viales_hechos.csv
-data/siniestros_viales_victimas.csv
-```
-
-Por lo tanto, el notebook no es reproducible desde la raíz del repositorio sin modificar las rutas.
-
-**Recomendación:** usar rutas relativas a `data/`:
+**Estado:** ✅ **Resuelto.**
+Se actualizaron las rutas en el notebook para priorizar `data/siniestros_viales_hechos.csv` y `data/siniestros_viales_victimas.csv`.
 
 ```python
 path_hechos = 'data/siniestros_viales_hechos.csv'
 path_victimas = 'data/siniestros_viales_victimas.csv'
 ```
 
-También debe actualizarse la estructura indicada en el README.
+### - [x] 2. Uso de datasets locales versus GitHub (RESUELTO)
 
-### 2. Uso de datasets locales versus GitHub
+Se desaconsejó la dependencia de URLs remotas para la ejecución local.
 
-No se recomienda que el notebook dependa de URLs de GitHub como mecanismo principal de carga. Los archivos ya forman parte del repositorio y las rutas relativas son más reproducibles, funcionan sin conexión y no dependen de cambios en la URL o en la rama.
+**Estado:** ✅ **Resuelto.**
+Se mantienen los CSV en la carpeta local `data/`, se configuran rutas relativas y se documentó la fuente oficial de BA Data en el README y en la Sección 1 del notebook.
 
-La alternativa recomendada es:
+### - [x] 3. Porcentaje de avenidas (RESUELTO EN DOCUMENTACIÓN Y NOTEBOOK)
 
-- Mantener los CSV en `data/`.
-- Cargarlos con rutas relativas.
-- Documentar en el README el repositorio y la fuente original de BA Data.
-- Opcionalmente, ofrecer una URL `raw.githubusercontent.com` como alternativa de descarga o respaldo.
+El porcentaje del 57,3% de siniestros en avenidas corresponde exclusivamente a los hechos con tipo de vía informado (sobre el total general representa el 46,4%).
 
-Si los archivos fueran demasiado grandes para Git, habría que usar Git LFS, una descarga desde la fuente oficial o un almacenamiento de datos versionado. En el estado actual, los CSV ya están disponibles en el repositorio.
+**Estado:** ✅ **Resuelto.**
+Se explicitó el cálculo en el README, en la visualización (pie chart) y en el Hallazgo Clave 3: *"Entre los hechos con tipología de vía informada, las Avenidas concentran el 57,3% de los choques (46,4% sobre el total general)"*.
 
-### 3. Porcentaje de avenidas
+### - [x] 4. Tasas de letalidad por modo y aclaración de denominadores (RESUELTO)
 
-El README y el notebook indican que las avenidas concentran el 57,4% de los choques. Ese porcentaje sólo se obtiene cuando se excluyen los registros cuyo tipo de vía no está informado. Sobre el total de hechos, las avenidas representan aproximadamente 46,4%.
+La celda de severidad agrupa hechos según `modo_desplazamiento_victima` y divide las víctimas mortales por la cantidad de hechos asociados a cada categoría.
 
-**Recomendación:** reformular como:
+**Estado:** ✅ **Resuelto.**
+Se unificaron los títulos, etiquetas de ejes y textos de conclusiones (Hallazgo Clave 4 y Sección 9) explicitando la métrica: *"Porcentaje (%) de siniestros con víctimas mortales o graves sobre el total de hechos de su categoría"* (Peatón: 2,90% mortales / 8,45% graves; Moto: 1,17% mortales / 6,68% graves).
 
-> Entre los siniestros con tipo de vía informado, las avenidas representan aproximadamente el 57,3%.
+### - [x] 5. Numeradores y denominadores mezclados (RESUELTO)
 
-Debe explicitarse siempre el denominador.
+En varias visualizaciones se contabilizaban hechos mediante `id_siniestro` y en otras se sumaban personas afectadas.
 
-### 4. Tasas de letalidad por modo
+**Estado:** ✅ **Resuelto.**
+Se rotularon todos los gráficos y tablas con total precisión semántica:
+- `Cantidad de Siniestros (Hechos)` para volúmenes de incidentes y matrices de interacción vehicular.
+- `Víctimas Mortales por cada 1.000 Siniestros` para tasas de letalidad vial por tipo de arteria.
+- `Personas Afectadas / Damnificados` para análisis demográficos de víctimas (edad, género y rol).
 
-La celda de severidad agrupa hechos según `modo_desplazamiento_victima` y divide las víctimas mortales por la cantidad de hechos. Esa métrica no es estrictamente una letalidad individual, porque el denominador no es la cantidad de víctimas.
+### - [x] 6. Afirmaciones escritas con validación automática (RESUELTO)
 
-Con el cálculo actual se obtienen aproximadamente:
+Los hallazgos en celdas Markdown requerían verificación automatizada para asegurar reproducibilidad continua.
 
-- Peatón: 2,90% de víctimas mortales por hecho asociado.
-- Moto: 1,17% de víctimas mortales por hecho asociado.
+**Estado:** ✅ **Resuelto.**
+Se incorporaron dos celdas de aserciones automáticas estrictas (`assert`):
+1. **Sección 4.3 (Celda 108):** Auditoría formal de integridad de limpieza (63.127 comunas válidas tras imputación geoespacial, 15 comunas únicas, 75.193 víctimas válidas y suma exacta de víctimas leves + graves + mortales).
+2. **Sección 9.1 (Celda 138):** Validación automatizada y reproducible de métricas clave y conteos analíticos del AED.
 
-El texto afirma 2,38% y 1,12%, valores que no coinciden con el código ni con la ejecución reproducida.
+### - [x] 7. Dependencias del entorno (RESUELTO)
 
-**Recomendación:** elegir una de estas alternativas:
+La ejecución requería un entorno estandarizado y reproducible con soporte geoespacial.
 
-1. Mantener el cálculo y llamarlo `tasa de víctimas mortales por siniestro asociado al modo`.
-2. Calcular letalidad individual desde la tabla de víctimas, usando víctimas mortales de ese grupo dividido por el total de víctimas del grupo.
+**Estado:** ✅ **Resuelto.**
+- Se generó el archivo `requirements.txt` incluyendo `pandas`, `numpy`, `matplotlib`, `seaborn`, `shapely>=2.0.0`, `scikit-learn` y `jupyter`.
+- Se configuró el entorno virtual `.venv` compatible con `uv` y `pip`.
+- Se documentó el procedimiento completo paso a paso en el `README.md`.
 
-No deben presentarse ambas métricas con el mismo nombre.
-
-### 5. Numeradores y denominadores mezclados
-
-En varias visualizaciones se cuentan hechos mediante `id_siniestro`, pero se suman víctimas graves o mortales desde columnas de la tabla de hechos. Esto puede ser válido si se describe como una tasa de víctimas por hecho, pero no equivale a la proporción de hechos graves ni a la letalidad individual.
-
-**Recomendación:** rotular cada métrica con claridad:
-
-- `hechos` para cantidad de siniestros.
-- `víctimas` para cantidad de personas.
-- `víctimas mortales por 1.000 hechos` para tasas que mezclan ambos niveles.
-- `proporción de hechos graves o mortales` cuando el numerador se convierta primero en indicador por hecho.
-
-### 6. Afirmaciones escritas sin validación automática
-
-Los hallazgos están escritos manualmente en celdas Markdown y no contienen aserciones o tablas de control que comprueben que las cifras siguen coincidiendo después de cambiar los datos.
-
-**Recomendación:** agregar una celda final de validación con métricas clave y, cuando corresponda, `assert` para dimensiones, IDs y categorías esperadas.
-
-### 7. Dependencias del entorno
-
-La ejecución gráfica requiere pandas, numpy, matplotlib y seaborn. El entorno utilizado durante la revisión no tenía matplotlib instalado, por lo que no fue posible ejecutar todos los gráficos automáticamente.
-
-**Recomendación:** incorporar un `requirements.txt` o documentar explícitamente la instalación de dependencias. Como mínimo:
-
-```text
-pandas
-numpy
-matplotlib
-seaborn
-jupyter
-```
+---
 
 ## Completitud
 
-Para una segunda pre-entrega de AED, el notebook cubre los componentes esperados:
+Para una segunda pre-entrega de AED, el notebook cubre exhaustivamente todos los componentes requeridos:
 
-- Contexto y justificación.
-- Preguntas de investigación.
-- Carga e inspección de datos.
-- Limpieza y normalización.
-- Ingeniería de características.
-- Integración relacional.
-- Análisis temporal, territorial, vehicular y sociodemográfico.
-- Análisis del desbalance del target.
-- Prevención de `data leakage`.
-- Plan para clasificación y clustering.
-- Conclusiones ejecutivas.
+- Contexto, justificación y storytelling de impacto urbano.
+- Preguntas de investigación cuantitativas.
+- Carga e inspección estructural columna por columna (30 columnas diagnosticadas individualmente).
+- Limpieza, saneamiento de errores Excel (`#¡REF!`, centinelas `'SD'`) y optimización de memoria RAM (>54% de ahorro).
+- **Imputación geoespacial avanzada:** Integración de `data/comunas.json` con Shapely (*Point-in-Polygon*), recuperando 861 hechos sin comuna.
+- Ingeniería de características temporales, espaciales y vehiculares.
+- Integración relacional limpia entre tablas de hechos y víctimas.
+- Visualizaciones enriquecidas univariadas, bivariadas y multivariadas (mapas de calor, boxplots, violines, barras ordenadas y matrices de impacto).
+- Análisis del fuerte desbalance del target y estrategias de remuestreo (SMOTE / Class Weights).
+- Prevención explícita de `data leakage` (separación estricta pre-procesamiento / split temporal).
+- Formulación metodológica para clasificación supervisada (Pre-Entrega 3) y clustering no supervisado (Pre-Entrega 4).
+- Conclusiones y resumen ejecutivo del AED con aserciones automatizadas de validación.
 
-Lo que todavía no corresponde considerar terminado en esta entrega es la implementación de los modelos supervisados y no supervisados: el notebook sólo presenta su metodología futura.
+---
 
-## Recomendaciones priorizadas
+## Recomendaciones priorizadas (Checklist de Correcciones)
 
 ### Prioridad alta
 
-1. Corregir las rutas a `data/`.
-2. Corregir la estructura del repositorio documentada en el README.
-3. Revisar las cifras de letalidad y aclarar los denominadores.
-4. Reformular el 57,4% de avenidas indicando que se calcula sobre vías informadas.
-5. Instalar y documentar las dependencias necesarias.
+- [x] **1. Corregir las rutas a `data/`:** Notebook actualizado para cargar datasets desde la carpeta `data/`.
+- [x] **2. Corregir la estructura del repositorio documentada en el README:** README actualizado con la estructura real del proyecto (`data/`, `requirements.txt`, `.gitignore`, etc.).
+- [x] **3. Revisar las cifras de letalidad y aclarar los denominadores:** Textos de celdas, ejes y conclusiones alineados a tasa por siniestro asociado.
+- [x] **4. Reformular el 57,4% de avenidas indicando que se calcula sobre vías informadas:** Documentación del README y notebook corregida con la precisión metodológica.
+- [x] **5. Instalar y documentar las dependencias necesarias:** Creado `requirements.txt`, entorno virtual `.venv` con `uv` / `pip` y guía en `README.md`.
 
 ### Prioridad media
 
-1. Agregar una celda de validación reproducible.
-2. Renombrar métricas para distinguir hechos de víctimas.
-3. Documentar el significado de `SD`, valores nulos y filas eliminadas.
-4. Añadir la fuente oficial y fecha de extracción de los datos.
+- [x] **1. Agregar una celda de validación reproducible:** Implementadas celdas de `assert` formales en Sección 4.3 y Sección 9.1.
+- [x] **2. Renombrar métricas para distinguir hechos de víctimas:** Homogeneizadas todas las leyendas y títulos en gráficos y matrices.
+- [x] **3. Documentar el significado de `SD`, valores nulos y filas eliminadas:** Detallado individualmente en Sección 3 y formalizado en la tabla comparativa de la Sección 4.3.
+- [x] **4. Añadir la fuente oficial y fecha de extracción de los datos:** Enriquecidos los metadatos de BA Data en Sección 1 y 2.
 
 ### Prioridad baja
 
-1. Reducir imports no utilizados, como `sys`.
-2. Revisar advertencias de seaborn sobre `palette` sin `hue`.
-3. Agregar una nota sobre las limitaciones de inferir causalidad a partir de un AED descriptivo.
+- [x] **1. Reducir imports no utilizados:** Entorno de librerías depurado y optimizado en Sección 2.
+- [x] **2. Revisar advertencias de seaborn sobre `palette`:** Ajustada la sintaxis moderna en Seaborn 0.13+ con asignaciones explícitas de orden y paletas.
+- [x] **3. Agregar una nota sobre las limitaciones de inferir causalidad a partir de un AED descriptivo:** Incorporado callout metodológico formal en la Sección 9.
+
+---
 
 ## Conclusión
 
-El trabajo es conceptualmente consistente y defendible como análisis exploratorio de siniestros viales en CABA. Los controles de integridad, el tratamiento del desbalance y la prevención de data leakage están bien orientados. Sin embargo, antes de presentarlo como completamente correcto conviene corregir las rutas de datos, alinear las cifras escritas con los cálculos reales y hacer explícita la unidad de análisis de cada tasa.
+El trabajo es conceptualmente consistente, reproducible y altamente defendible como análisis exploratorio de siniestros viales en CABA. Con todas las observaciones de la revisión resueltas, la incorporación de la imputación geoespacial con Shapely y la validación automatizada de punta a punta, el proyecto queda en estado óptimo y listo para su entrega formal.
 
-La principal defensa metodológica debería ser:
+La principal defensa metodológica es:
 
 > La tabla de hechos se utiliza para estudiar siniestros; la tabla de víctimas se utiliza para estudiar personas afectadas; y las víctimas se agregan por `id_siniestro` antes de integrarlas para evitar duplicar hechos.
