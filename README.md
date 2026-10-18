@@ -1,6 +1,7 @@
 # **Proyecto Final de Ciencia de Datos: Seguridad Vial en CABA**
 ### **Programa EnergIA Digital — Fundación YPF**
-**Docente:** Gabriel Acosta | **Tutora:** Belén Laresca  
+**Docentes:** Benjamin Aseretto / Gabriel Acosta
+**Tutora:** Belén Laresca  
 **Grupo 8:** Diego Bianqui, Luida Medina, Matías Lorenzo  
 
 ---
@@ -8,7 +9,7 @@
 ## 📌 **Origen del Dataset**
 Los datos fueron obtenidos del portal oficial de datos abiertos del Gobierno de la Ciudad Autónoma de Buenos Aires (**[BA Data](https://data.buenosaires.gob.ar/)**), provistos por el *Observatorio de Movilidad y Seguridad Vial (OMSV)* perteneciente a la Secretaría de Transporte y el Ministerio de Infraestructura y Movilidad de la Ciudad. 
 
-El conjunto está integrado por dos recursos relacionales:
+El conjunto está integrado por dos recursos relacionales y un archivo .json:
 - `siniestros_viales_hechos.csv`: **65.818 hechos** registrados con variables temporales, geográficas y dinámicas de colisión.
 - `siniestros_viales_victimas.csv`: **75.197 víctimas** con atributos demográficos y desenlace médico auditado en los 14 hospitales de agudos y seguimiento a 30 días posteriores al siniestro.
 - `comunas.json`: Polígonos geográficos oficiales de las **15 comunas de CABA** en formato GeoJSON (WGS84) provistos por el Catastro de CABA.
@@ -45,7 +46,7 @@ El notebook implementa un pipeline de preprocesamiento estructurado en dos grand
 3. **Optimización de Memoria RAM (>54% de Ahorro):**
    - Downcasting de enteros (`int16`, `uint8`), enteros nulleables (`Int8` para comunas y horas) y variables categóricas optimizadas (`category`), reduciendo el consumo de RAM de **58,23 MB a 26,46 MB**.
 4. **Validación Automatizada Continua:**
-   - Celdas de auditoría formal con aserciones automáticas (`assert`) en Sección 4.3 y Sección 9.1 para garantizar integridad referencial y reproducibilidad matemática.
+   - Celdas de auditoría formal con aserciones automáticas (`assert`) en Sección 4.3 para garantizar integridad referencial.
 
 ---
 
@@ -60,8 +61,11 @@ El notebook implementa un pipeline de preprocesamiento estructurado en dos grand
 
 ---
 
-## 🤖 **Detalle de los Modelos (Hoja de Ruta Pre-Entregas 3 y 4)**
-- **Modelo Supervisado (Pre-Entrega 3 - Clasificación de Severidad):** Se entrenará un modelo multiclase para predecir `gravedad_siniestro` comparando `DummyClassifier` (baseline), `LogisticRegression`, `DecisionTree`, `RandomForest` y `HistGradientBoostingClassifier`. Se aplica una política estricta de prevención de **Data Leakage**, excluyendo variables conocidas exclusivamente post-siniestro.
+## 🤖 **Detalle de los Modelos (Resultados Pre-Entrega 3 y Hoja de Ruta Pre-Entrega 4)**
+- **Modelos Supervisados (Pre-Entrega 3 - Clasificación y Regresión de Punta a Punta):**
+  - **Clasificación de Severidad Operativa (Triage SAME / 911):** Predicción de siniestros graves o mortales (`es_grave_o_mortal`) a partir exclusivamente de condiciones ex-ante (sin data leakage). Se compararon 5 modelos (`Dummy`, `LogisticRegression`, `DecisionTree`, `RandomForest`, `HistGradientBoosting`).
+  - **Prevención de Overfitting y Optimización de Hiperparámetros:** Curvas de complejidad (Train vs. CV) y afinación sistemática con `GridSearchCV` (`learning_rate=0.08`, `max_leaf_nodes=15`, `l2_regularization=1.0`).
+  - **Resultados en Test No Visto (13.164 Hechos):** **ROC-AUC = 0.7909** (vs. 0.5000 baseline), **PR-AUC = 0.2283** (4.2x superior a la prevalencia basal del 5.54%), **Balanced Accuracy = 0.709** y **Recall SAME = 76.8%** en la captura de incidentes críticos.
 - **Modelo No Supervisado (Pre-Entrega 4 - Clustering de Siniestros):** Se aplicarán algoritmos `K-Means` y `DBSCAN` sobre características ex-ante (horario, día de semana, tipo de arteria, comuna y actores vehiculares involucrados), utilizando el Método del Codo y el Coeficiente de Silueta para descubrir perfiles de riesgo vial.
 
 ---
@@ -75,8 +79,9 @@ DATA_SCIENCE_GROUP_8/
 │   ├── siniestros_viales_victimas.csv                  # Dataset oficial de Víctimas (OMSV)
 │   └── comunas.json                                    # Polígonos GeoJSON oficiales de las 15 comunas de CABA
 │
-├── Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb  # Notebook principal de la 2ª Pre-entrega (138 celdas)
-├── requirements.txt                                    # Dependencias del proyecto (incluye shapely>=2.0.0)
+├── Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb       # Notebook de la 2ª Pre-entrega (AED - 138 celdas)
+├── Entrega_3_Modelos_Supervisados_Siniestros_Viales_CABA.ipynb        # Notebook de la 3ª Pre-entrega (Modelos Supervisados - 157 celdas)
+├── requirements.txt                                    # Dependencias del proyecto (incluye shapely>=2.0.0, scikit-learn>=1.4.0)
 ├── .gitignore                                          # Exclusiones de Git (.venv, checkpoints, scratch/, etc.)
 ├── revision.md                                         # Auditoría técnica, diagnósticos y checklist de mejoras resueltas
 └── README.md                                           # Documentación general y guía de ejecución
