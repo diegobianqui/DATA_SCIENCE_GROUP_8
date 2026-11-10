@@ -1,25 +1,22 @@
-# ==============================================================================
-# Dependencias del Proyecto: Seguridad Vial en CABA (Grupo 8 - Fundación YPF)
-# ==============================================================================
+# Dependencias del Proyecto: Seguridad Vial en CABA — Grupo 8
 
 # Manipulación y análisis de datos
 pandas>=2.2.0
 numpy>=2.0.0
 
-# Visualización estadística y gráficos
+# Visualización
 matplotlib>=3.8.0
 seaborn>=0.13.0
 
-# Entorno interactivo y soporte de Notebooks en VS Code / Jupyter
+# Entorno Jupyter
 ipykernel>=6.29.0
 jupyter>=1.0.0
 notebook>=7.0.0
 
-# Modelado estadístico y Machine Learning (Clasificación Supervisada - Entrega Final)
+# Machine Learning supervisado y no supervisado
 scikit-learn>=1.4.0
 scipy>=1.12.0
 
-# Utilidades complementarias de entrada/salida y análisis espacial
-openpyxl>=3.1.0
+# Geoespacial y lectura de archivos
 shapely>=2.0.0
-
+openpyxl>=3.1.0
