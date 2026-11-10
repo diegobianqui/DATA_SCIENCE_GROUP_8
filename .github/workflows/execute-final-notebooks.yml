@@ -1,0 +1,88 @@
+name: Execute final course notebooks
+
+on:
+  push:
+    branches:
+      - release/final-course-project
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: final-course-notebooks-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  execute-notebooks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Check out release candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt nbconvert
+
+      - name: Execute exploratory, supervised and clustering notebooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p executed
+          notebooks=(
+            "Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb"
+            "Entrega_3_Modelos_Supervisados_Siniestros_Viales_CABA.ipynb"
+            "Entrega_4_Modelos_No_Supervisados_Clustering_Siniestros_Viales_CABA.ipynb"
+          )
+          for notebook in "${notebooks[@]}"; do
+            echo "Executing ${notebook}"
+            jupyter nbconvert \
+              --to notebook \
+              --execute \
+              --ExecutePreprocessor.timeout=3600 \
+              --ExecutePreprocessor.kernel_name=python3 \
+              --output-dir executed \
+              "${notebook}"
+          done
+
+      - name: Upload executed notebooks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-course-executed-notebooks
+          path: executed/*.ipynb
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Replace source notebooks with executed versions
+        run: |
+          set -euo pipefail
+          cp executed/*.ipynb .
+
+      - name: Commit executed notebook outputs
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb \
+            Entrega_3_Modelos_Supervisados_Siniestros_Viales_CABA.ipynb \
+            Entrega_4_Modelos_No_Supervisados_Clustering_Siniestros_Viales_CABA.ipynb
+          if git diff --cached --quiet; then
+            echo "No notebook output changes to commit."
+          else
+            git commit -m "chore(release): save fully executed course notebooks"
+            git push origin "${GITHUB_REF_NAME}"
+          fi
