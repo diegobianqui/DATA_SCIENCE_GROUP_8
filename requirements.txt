@@ -15,7 +15,7 @@ ipykernel>=6.29.0
 jupyter>=1.0.0
 notebook>=7.0.0
 
-# Modelado estadístico y Machine Learning (Pre-entregas 3 y 4)
+# Modelado estadístico y Machine Learning (Clasificación Supervisada - Entrega Final)
 scikit-learn>=1.4.0
 scipy>=1.12.0
 
