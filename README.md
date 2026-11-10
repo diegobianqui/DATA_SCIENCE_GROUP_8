@@ -17,18 +17,17 @@ El conjunto está integrado por dos recursos relacionales y un archivo .json:
 ---
 
 ## 📖 **Resumen del Proyecto**
-Este proyecto aborda la problemática de la seguridad vial urbana en la Ciudad Autónoma de Buenos Aires entre los años 2019 y 2025 desde un enfoque integral de Ciencia de Datos. Mediante técnicas de limpieza, normalización de variables, ingeniería de características espaciotemporales, imputación geoespacial automatizada (*Point-in-Polygon*), integración relacional y visualizaciones con storytelling, se analizan los patrones de siniestralidad para caracterizar los perfiles de mayor riesgo y sentar las bases de modelos predictivos y de segmentación no supervisada que sirvan de insumo para la toma de decisiones en políticas públicas de tránsito y respuesta de emergencias médicas (SAME).
+Este proyecto aborda la problemática de la seguridad vial urbana en la Ciudad Autónoma de Buenos Aires entre los años 2019 y 2025 desde un enfoque integral de Ciencia de Datos. Mediante técnicas de limpieza, normalización de variables, ingeniería de características espaciotemporales, imputación geoespacial automatizada (*Point-in-Polygon*), integración relacional y visualizaciones con storytelling, se analizan los patrones de siniestralidad para caracterizar los perfiles de mayor riesgo y evaluar un modelo supervisado de clasificación que identifique patrones asociados a siniestros graves o mortales, como insumo analítico para políticas públicas de tránsito y planificación de emergencias médicas (SAME).
 
 ---
 
 ## 🎯 **Objetivo Propuesto**
 El objetivo central consiste en responder:  
-> *¿Qué factores temporales, territoriales y de interacción vehicular explican y anticipan la gravedad de los siniestros viales en CABA, y cómo podemos identificar agrupamientos naturales (clusters) de accidentes para intervenir preventivamente?*
+> *¿Qué factores temporales, territoriales y de interacción vehicular están asociados con una mayor probabilidad histórica de que un siniestro sea grave o mortal?*
 
 Para ello, el proyecto se estructura en etapas:
 1. **Pre-Entrega 2:** Análisis Exploratorio de Datos (AED), diagnóstico columna por columna (30 variables), limpieza, imputación geoespacial con Shapely, ingeniería de features y visualizaciones.
-2. **Pre-Entrega 3:** Modelo de clasificación multiclase supervisado para predecir la gravedad del hecho sin incurrir en *data leakage*.
-3. **Pre-Entrega 4:** Modelo de clustering no supervisado para segmentar tipologías de siniestralidad.
+2. **Entrega Final:** Modelo binario de clasificación supervisada para identificar siniestros graves o mortales, con prevención explícita de *data leakage*, comparación de cinco algoritmos, validación cruzada, ajuste de hiperparámetros y evaluación en un conjunto de test no visto.
 
 ---
 
@@ -61,12 +60,14 @@ El notebook implementa un pipeline de preprocesamiento estructurado en dos grand
 
 ---
 
-## 🤖 **Detalle de los Modelos (Resultados Pre-Entrega 3 y Hoja de Ruta Pre-Entrega 4)**
-- **Modelos Supervisados (Pre-Entrega 3 - Clasificación y Regresión de Punta a Punta):**
-  - **Clasificación de Severidad Operativa (Triage SAME / 911):** Predicción de siniestros graves o mortales (`es_grave_o_mortal`) a partir exclusivamente de condiciones ex-ante (sin data leakage). Se compararon 5 modelos (`Dummy`, `LogisticRegression`, `DecisionTree`, `RandomForest`, `HistGradientBoosting`).
-  - **Prevención de Overfitting y Optimización de Hiperparámetros:** Curvas de complejidad (Train vs. CV) y afinación sistemática con `GridSearchCV` (`learning_rate=0.08`, `max_leaf_nodes=15`, `l2_regularization=1.0`).
-  - **Resultados en Test No Visto (13.164 Hechos):** **ROC-AUC = 0.7909** (vs. 0.5000 baseline), **PR-AUC = 0.2283** (4.2x superior a la prevalencia basal del 5.54%), **Balanced Accuracy = 0.709** y **Recall SAME = 76.8%** en la captura de incidentes críticos.
-- **Modelo No Supervisado (Pre-Entrega 4 - Clustering de Siniestros):** Se aplicarán algoritmos `K-Means` y `DBSCAN` sobre características ex-ante (horario, día de semana, tipo de arteria, comuna y actores vehiculares involucrados), utilizando el Método del Codo y el Coeficiente de Silueta para descubrir perfiles de riesgo vial.
+## 🤖 **Modelo Supervisado de Clasificación: Resultados de la Entrega Final**
+- **Objetivo:** Clasificar cada siniestro como leve o grave/mortal (`es_grave_o_mortal`) usando 21 variables de contexto temporal, territorial y de actores involucrados.
+- **Prevención de Data Leakage:** Se excluyen variables que solo se conocen después de la atención médica o del desenlace del siniestro.
+- **Comparación:** Se evaluaron cinco clasificadores (`Dummy`, Regresión Logística, Árbol de Decisión, Random Forest e HistGradientBoosting) mediante validación cruzada estratificada de cinco pliegues.
+- **Selección y ajuste:** `HistGradientBoostingClassifier`, con `learning_rate=0.04`, `max_leaf_nodes=15` y `l2_regularization=0.0`; mejor ROC-AUC de validación cruzada en GridSearchCV: **0.7734**.
+- **Test no visto (13.164 siniestros):** **ROC-AUC = 0.7900**, **PR-AUC = 0.2256**, **Balanced Accuracy = 0.7055**, **Macro F1 = 0.4852** y **Recall grave/mortal = 76.95%** con umbral 0.50.
+
+> **Interpretación responsable:** Los resultados son retrospectivos. La precisión de 11,18% al umbral 0.50 implica falsos positivos relevantes; cualquier uso operativo requiere validación temporal y externa, calibración, análisis de costos y supervisión de especialistas. El modelo no está validado para decisiones clínicas ni para despacho autónomo.
 
 ---
 
@@ -80,7 +81,7 @@ DATA_SCIENCE_GROUP_8/
 │   └── comunas.json                                    # Polígonos GeoJSON oficiales de las 15 comunas de CABA
 │
 ├── Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb       # Notebook de la 2ª Pre-entrega (AED - 138 celdas)
-├── Entrega_3_Modelos_Supervisados_Siniestros_Viales_CABA.ipynb        # Notebook de la 3ª Pre-entrega (Modelos Supervisados - 157 celdas)
+├── Entrega_3_Modelos_Supervisados_Siniestros_Viales_CABA.ipynb        # Notebook de la entrega final (Clasificación Supervisada - 150 celdas)
 ├── requirements.txt                                    # Dependencias del proyecto (incluye shapely>=2.0.0, scikit-learn>=1.4.0)
 ├── .gitignore                                          # Exclusiones de Git (.venv, checkpoints, scratch/, etc.)
 ├── revision.md                                         # Auditoría técnica, diagnósticos y checklist de mejoras resueltas
@@ -178,7 +179,7 @@ Para trabajar de forma óptima con este proyecto en **VS Code**, se sugiere inst
 ### **A. Ejecución en Visual Studio Code (Recomendado)**
 
 1. Abre la carpeta del repositorio en VS Code (`File > Open Folder...` y selecciona `DATA_SCIENCE_GROUP_8`).
-2. Abre el archivo [`Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb`](file:///c:/Users/Matias/Desktop/CURSOS%202026/ciencia_datos/DATA_SCIENCE_GROUP_8/Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb).
+2. Abre el notebook [`Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb`](Entrega_2_Analisis_Exploratorio_Siniestros_Viales_CABA.ipynb) para el AED o [`Entrega_3_Modelos_Supervisados_Siniestros_Viales_CABA.ipynb`](Entrega_3_Modelos_Supervisados_Siniestros_Viales_CABA.ipynb) para el modelo final.
 3. En la esquina superior derecha del notebook, haz clic en **Select Kernel** (o `Cambiar Kernel`).
 4. Selecciona **Python Environments...** y elige el entorno virtual recién creado: **`.venv` (Python 3.x)**.
 5. Ejecuta las celdas secuencialmente presionando `Shift + Enter` o haz clic en **Run All** en la barra superior del notebook.
@@ -202,4 +203,4 @@ El navegador se abrirá automáticamente en `http://localhost:8888`. Abre el arc
 ---
 
 ## 📋 **Control de Calidad y Validaciones**
-El archivo [`revision.md`](file:///c:/Users/Matias/Desktop/CURSOS%202026/ciencia_datos/DATA_SCIENCE_GROUP_8/revision.md) contiene la auditoría técnica detallada del trabajo práctico, incluyendo el diagnóstico de integridad referencial, consistencia de datos, prevención de data leakage y la lista de control de todas las mejoras resueltas.
+El archivo `revision.md` contiene la auditoría técnica del análisis exploratorio, incluyendo el diagnóstico de integridad referencial, consistencia de datos y las correcciones aplicadas.
